@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class UIManager
+public class UIManager : MonoBehaviour
 {
     
 }

@@ -2,7 +2,7 @@ using System.Diagnostics;
 using UnityEngine;
 
 [DebuggerDisplay("{" + nameof(GetDebuggerDisplay) + "(),nq}")]
-public class GameManager
+public class GameManager : MonoBehaviour
 {
 
 
