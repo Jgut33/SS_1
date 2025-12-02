@@ -27,10 +27,45 @@ public class LevelManager : MonoBehaviour
     // --- МЕТОДИ ДЛЯ InteractionZone ---
 
     // area_pick_
-    public void HandleInventoryPickup(string itemName)
+    /// <summary>
+    /// Обробляє підбір предмета, приховуючи колайдер та запускаючи анімацію візуалу.
+    /// </summary>
+    /// <param name="itemName">Назва предмета.</param>
+    /// <param name="zoneObject">Батьківський об'єкт зони (для вимкнення колайдера).</param>
+    /// <param name="visualObject">Візуальний об'єкт, який потрібно анімувати.</param>
+    public void HandleInventoryPickup(string itemName, GameObject zoneObject, GameObject visualObject)
     {
-        Debug.Log($"Picked up item: {itemName}");
-        // TODO: Додати предмет до InventoryManager
+        // 1. ПРИХОВУЄМО ЗОНУ ВЗАЄМОДІЇ (Колайдер)
+        // Ми вимикаємо лише компонент Collider2D, щоб ZoneObject міг залишитися,
+        // якщо він потрібен для запуску анімації польоту, або вимикаємо весь об'єкт,
+        // якщо він більше не потрібен (залежить від вашого flow).
+
+        // Щоб зберегти об'єкт для майбутніх анімацій, краще вимкнути лише колайдер:
+        Collider2D collider = zoneObject.GetComponent<Collider2D>();
+        if (collider != null)
+        {
+            collider.enabled = false;
+        }
+        else
+        {
+            // Альтернатива: якщо колайдер не знайдено, просто деактивуємо весь батьківський об'єкт зони.
+            zoneObject.SetActive(false);
+        }
+
+        // 2. ДОДАЄМО ПРЕДМЕТ (Логіка)
+        InventoryManager.Instance.AddItem(itemName, isPart: false);
+
+        // 3. ЗАПУСКАЄМО АНІМАЦІЮ ВІЗУАЛЬНОГО ОБ'ЄКТА
+        if (visualObject != null)
+        {
+            Debug.Log($"Starting animation for {itemName} to Inventory Panel.");
+            // TODO: Викликати тут метод, який перемістить visualObject від його поточної позиції
+            //       до цільової позиції на UI Panel (наприклад, за допомогою DOTween або Unity Animation).
+            //       Після завершення анімації visualObject слід Destroy() або SetActive(false).
+            visualObject.SetActive(false);
+        }
+
+        Debug.Log($"Item picked up: {itemName}. Ready for animation.");
     }
 
     // area_zoom_, area_dialog_
@@ -111,4 +146,6 @@ public class LevelManager : MonoBehaviour
             // TODO: Видалити плейсхолдер
         }
     }
+
+
 }

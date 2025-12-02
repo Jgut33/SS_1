@@ -2,7 +2,7 @@
 using UnityEngine;
 using UnityEngine.EventSystems; // Потрібно для обробки Drag and Drop
 
-public class InteractionZone : MonoBehaviour
+public class InteractionZone : MonoBehaviour, IPointerClickHandler
 {
     // --- ЗМІННІ ---
 
@@ -44,19 +44,30 @@ public class InteractionZone : MonoBehaviour
 
     // --- ОБРОБКА КЛІКУ (OnMouseDown, OnMouseUp) ---
 
+    [Header("Visual Item")]
+    public GameObject visualItem;
+
     // OnMouseDown використовується для звичайного кліку (area_pick_, area_zoom_, etc.)
-    private void OnMouseDown()
+    public void OnPointerClick(PointerEventData eventData)
     {
+        // ВАЖЛИВО: Перевіряємо, що клік лівою кнопкою (основний дотик)
+        //if (eventData.button != PointerEventData.InputButton.Left)
+        //{
+        //    return;
+        //}
+
+        Debug.Log($"InteractionZone: Clicked on {fullZoneName}");
         // Якщо ми вже щось перетягуємо, не обробляємо клік на фоновій зоні
         // if (GameManager.Instance.IsDragging) return; 
+        Debug.Log($"CLICK REGISTERED on: {gameObject.name}"); // ← Тимчасовий лог
 
         switch (actionPrefix)
         {
             case "area_pick_":
                 // Підбір предмета в інвентар
-                LevelManager.Instance.HandleInventoryPickup(targetName);
+                LevelManager.Instance.HandleInventoryPickup(targetName, this.gameObject, visualItem); 
                 break;
-
+                 
             case "area_zoom_":
             case "area_dialog_":
                 // Відкриття зуму / діалогу
@@ -85,13 +96,13 @@ public class InteractionZone : MonoBehaviour
     }
 
     // Обробка завершення утримання
-    private void OnMouseUp()
-    {
-        if (actionPrefix == "area_hold_")
-        {
-            LevelManager.Instance.HandleHoldEnd(targetName);
-        }
-    }
+    //private void OnMouseUp()
+    //{
+    //    if (actionPrefix == "area_hold_")
+    //    {
+    //        LevelManager.Instance.HandleHoldEnd(targetName);
+    //    }
+    //}
 
     // --- ЛОГІКА DRAG-AND-DROP (Перетягування) ---
     // (Потрібно, щоб зона була "area_get_..." або "area_drop_...")
