@@ -1,5 +1,7 @@
 ﻿using UnityEngine;
 using UnityEngine.SceneManagement; // Потрібно для LoadScene
+using UnityEngine.UI;
+using System.Collections; // Потрібно ДЛЯ РОБОТИ З COROUTINES
 
 public class LevelManager : MonoBehaviour
 {
@@ -9,6 +11,16 @@ public class LevelManager : MonoBehaviour
     [Header("Zoom UI")]
     [Tooltip("Головний батьківський об'єкт, який містить усі елементи зуму (спрайт, зони взаємодії).")]
     public GameObject zoomContainer;
+
+    // ----------------------------------------
+    // ЗМІННІ ДЛЯ ЗАТЕМНЕННЯ (FADE)
+    // ----------------------------------------
+    [Header("Scene Transition Settings")]
+    [Tooltip("UI Image, який використовується як затемнення (FaderPanel).")]
+    public Image faderPanel;
+
+    [Tooltip("Час (у секундах), за який відбувається затемнення до чорного.")]
+    public float fadeDuration = 0.5f;
 
     // Глобальний стан для перетягування (Drag & Drop)
     [HideInInspector] public bool IsDragging = false;
@@ -28,12 +40,20 @@ public class LevelManager : MonoBehaviour
         }
     }
 
+    void Start()
+    {
+        // Одразу після того, як сцена завантажилася, і Singleton LevelManager ініціалізувався:
+        if (faderPanel != null) 
+        {
+            // Плавно виходимо з чорного екрана
+            FadeIn();
+        }
+    }
+
     // --- МЕТОДИ ДЛЯ InteractionZone ---
 
     // area_pick_
-    /// <summary>
     /// Обробляє підбір предмета, приховуючи колайдер та запускаючи анімацію візуалу.
-    /// </summary>
     /// <param name="itemName">Назва предмета.</param>
     /// <param name="zoneObject">Батьківський об'єкт зони (для вимкнення колайдера).</param>
     /// <param name="visualObject">Візуальний об'єкт, який потрібно анімувати.</param>
@@ -108,22 +128,77 @@ public class LevelManager : MonoBehaviour
     }
 
     // area_link_
-    /// <summary>
-    /// Завантажує вказану сцену за назвою.
-    /// </summary>
-    /// <param name="sceneName">Назва сцени, яку потрібно завантажити (наприклад, "Level_2").</param>
+    // ----------------------------------------
+    // МЕТОД ПЕРЕХОДУ З ЗАТЕМНЕННЯМ
+    // ----------------------------------------
+    /// Запускає процес затемнення та завантаження сцени.
+    /// Цей метод викликається з InteractionZone.
     public void LoadScene(string sceneName)
     {
-        // Перевірка, чи існує сцена з такою назвою
-        if (Application.CanStreamedLevelBeLoaded(sceneName))
+        // Перевіряємо, чи існує сцена та чи налаштована панель затемнення
+        if (Application.CanStreamedLevelBeLoaded(sceneName) && faderPanel != null)
         {
-            SceneManager.LoadScene(sceneName);
-            Debug.Log($"Scene successfully loaded: {sceneName}");
+            StartCoroutine(FadeAndLoadScene(sceneName));
         }
         else
         {
-            Debug.LogError($"Error: Scene '{sceneName}' could not be loaded. Check if the scene name is correct and added to Build Settings.");
+            Debug.LogError($"Cannot load scene '{sceneName}' or FaderPanel is not assigned.");
         }
+    }
+
+    /// Корутина для плавного затемнення та завантаження нової сцени.
+    private IEnumerator FadeAndLoadScene(string sceneName)
+    {
+        // 1. АНІМАЦІЯ ЗАТЕМНЕННЯ (Fade Out - затемнення до чорного)
+        yield return StartCoroutine(Fade(1f)); // Затемнюємо до непрозорості (alpha = 1)
+
+        // 2. ЗАВАНТАЖЕННЯ СЦЕНИ
+        Debug.Log($"Loading scene: {sceneName}");
+        SceneManager.LoadScene(sceneName);
+
+        // Додатково: Щоб уникнути чорного екрана назавжди, 
+        // нова сцена також повинна запустити Fade(0f) у своєму LevelManager.Awake()
+    }
+
+    /// Змінює прозорість FaderPanel від поточної до targetAlpha.
+    /// <param name="targetAlpha">Цільова прозорість (0f = прозорий, 1f = чорний).</param>
+    private IEnumerator Fade(float targetAlpha)
+    {
+        float startAlpha = faderPanel.color.a;
+        float timer = 0f;
+
+        while (timer < fadeDuration)
+        {
+            timer += Time.deltaTime;
+            float newAlpha = Mathf.Lerp(startAlpha, targetAlpha, timer / fadeDuration);
+
+            // Оновлюємо колір, змінюючи лише альфа-канал
+            Color newColor = faderPanel.color;
+            newColor.a = newAlpha;
+            faderPanel.color = newColor;
+
+            yield return null; // Чекаємо наступного кадру
+        }
+
+        // Встановлюємо точне кінцеве значення, щоб уникнути похибок Lerp
+        Color finalColor = faderPanel.color;
+        finalColor.a = targetAlpha;
+        faderPanel.color = finalColor;
+    }
+
+    // ----------------------------------------
+    // МЕТОД ДЛЯ НОВОЇ СЦЕНИ (Fade In)
+    // ----------------------------------------
+    /// Метод, який нова сцена викликає для плавного "виходу" з чорного екрана.
+    /// Рекомендується викликати його у Start() нової сцени.
+    public void FadeIn()
+    {
+        // Переконайтеся, що faderPanel починає з 1f (чорний)
+        Color startColor = faderPanel.color;
+        startColor.a = 1f;
+        faderPanel.color = startColor;
+
+        StartCoroutine(Fade(0f)); // Починаємо затемнення до прозорості (alpha = 0)
     }
 
     // area_click_
