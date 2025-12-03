@@ -6,6 +6,10 @@ public class LevelManager : MonoBehaviour
     // 1. Singleton: Статичний екземпляр класу
     public static LevelManager Instance;
 
+    [Header("Zoom UI")]
+    [Tooltip("Головний батьківський об'єкт, який містить усі елементи зуму (спрайт, зони взаємодії).")]
+    public GameObject zoomContainer;
+
     // Глобальний стан для перетягування (Drag & Drop)
     [HideInInspector] public bool IsDragging = false;
     private string currentlyDraggedItem = "";
@@ -69,17 +73,57 @@ public class LevelManager : MonoBehaviour
     }
 
     // area_zoom_, area_dialog_
-    public void HandleZoom(string zoomTargetName)
+    /// <summary>
+    /// Відкриває режим зуму, активуючи відповідний контейнер.
+    /// </summary>
+    /// <param name="zoomName">Назва зуму (наприклад, "Chest" або "Shelf").</param>
+    public void HandleZoom(string zoomName)
     {
-        Debug.Log($"Opening zoom/dialog: {zoomTargetName}");
-        // TODO: Активувати UI Canvas для зуму
+        if (zoomContainer != null)
+        {
+            // У реальній грі тут буде логіка: 
+            // 1. Зміна спрайта/текстури в zoomContainer на арт, що відповідає zoomName
+            // 2. Активація zoomContainer
+
+            zoomContainer.SetActive(true);
+            Debug.Log($"Zoom opened: {zoomName}");
+        }
+        else
+        {
+            Debug.LogError("Zoom Container is not assigned in LevelManager!");
+        }
+    }
+
+    /// <summary>
+    /// Закриває режим зуму, повертаючись до основного огляду сцени.
+    /// </summary>
+    public void CloseZoom()
+    {
+        if (zoomContainer != null)
+        {
+            // Деактивуємо контейнер, повертаючись до основної сцени
+            zoomContainer.SetActive(false);
+            Debug.Log("Zoom closed. Back to main scene.");
+        }
     }
 
     // area_link_
+    /// <summary>
+    /// Завантажує вказану сцену за назвою.
+    /// </summary>
+    /// <param name="sceneName">Назва сцени, яку потрібно завантажити (наприклад, "Level_2").</param>
     public void LoadScene(string sceneName)
     {
-        Debug.Log($"Loading scene: {sceneName}");
-        // SceneManager.LoadScene(sceneName);
+        // Перевірка, чи існує сцена з такою назвою
+        if (Application.CanStreamedLevelBeLoaded(sceneName))
+        {
+            SceneManager.LoadScene(sceneName);
+            Debug.Log($"Scene successfully loaded: {sceneName}");
+        }
+        else
+        {
+            Debug.LogError($"Error: Scene '{sceneName}' could not be loaded. Check if the scene name is correct and added to Build Settings.");
+        }
     }
 
     // area_click_

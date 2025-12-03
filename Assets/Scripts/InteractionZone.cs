@@ -50,16 +50,15 @@ public class InteractionZone : MonoBehaviour, IPointerClickHandler
     // OnMouseDown використовується для звичайного кліку (area_pick_, area_zoom_, etc.)
     public void OnPointerClick(PointerEventData eventData)
     {
-        // ВАЖЛИВО: Перевіряємо, що клік лівою кнопкою (основний дотик)
-        //if (eventData.button != PointerEventData.InputButton.Left)
-        //{
-        //    return;
-        //}
+        //ВАЖЛИВО: Перевіряємо, що клік лівою кнопкою(основний дотик)
+        if (eventData.button != PointerEventData.InputButton.Left)
+        {
+            return;
+        }
 
         Debug.Log($"InteractionZone: Clicked on {fullZoneName}");
         // Якщо ми вже щось перетягуємо, не обробляємо клік на фоновій зоні
-        // if (GameManager.Instance.IsDragging) return; 
-        Debug.Log($"CLICK REGISTERED on: {gameObject.name}"); // ← Тимчасовий лог
+        if (LevelManager.Instance.IsDragging) return; 
 
         switch (actionPrefix)
         {
@@ -69,6 +68,12 @@ public class InteractionZone : MonoBehaviour, IPointerClickHandler
                 break;
                  
             case "area_zoom_":
+                LevelManager.Instance.HandleZoom(targetName);
+                break;
+            case "area_fade_":
+                // Закриваємо зум, незалежно від targetName (наприклад, area_fade_BACK)
+                LevelManager.Instance.CloseZoom();
+                break;
             case "area_dialog_":
                 // Відкриття зуму / діалогу
                 LevelManager.Instance.HandleZoom(targetName);
