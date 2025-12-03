@@ -12,15 +12,16 @@ public class LevelManager : MonoBehaviour
     [Tooltip("Головний батьківський об'єкт, який містить усі елементи зуму (спрайт, зони взаємодії).")]
     public GameObject zoomContainer;
 
-    // ----------------------------------------
     // ЗМІННІ ДЛЯ ЗАТЕМНЕННЯ (FADE)
-    // ----------------------------------------
     [Header("Scene Transition Settings")]
     [Tooltip("UI Image, який використовується як затемнення (FaderPanel).")]
     public Image faderPanel;
 
     [Tooltip("Час (у секундах), за який відбувається затемнення до чорного.")]
     public float fadeDuration = 0.5f;
+
+    [Header("Data Management")]
+    public GameStringData gameStrings;
 
     // Глобальний стан для перетягування (Drag & Drop)
     [HideInInspector] public bool IsDragging = false;
@@ -33,6 +34,7 @@ public class LevelManager : MonoBehaviour
         {
             Instance = this;
             // Optionally: DontDestroyOnLoad(gameObject); якщо менеджер має бути на всіх сценах
+            LoadStrings("strings_ua");
         }
         else
         {
@@ -50,6 +52,32 @@ public class LevelManager : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Завантажує текстові дані з JSON-файлу у папці Resources.
+    /// </summary>
+    /// <param name="fileName">Назва файлу без розширення (наприклад, "strings_ua").</param>
+    private void LoadStrings(string fileName)
+    {
+        TextAsset jsonFile = Resources.Load<TextAsset>(fileName);
+
+        if (jsonFile != null)
+        {
+            // 1. Десеріалізація JSON:
+            // JsonUtility не підтримує пряму десеріалізацію в Dictionary<string, string>, 
+            // тому ми використовуємо обхідний шлях: десеріалізацію у клас з єдиним словником.
+            gameStrings = JsonUtility.FromJson<GameStringData>(jsonFile.text);
+
+            if (gameStrings != null && gameStrings.strings != null)
+            {
+                Debug.Log($"Strings loaded successfully from {fileName}.json. Total entries: {gameStrings.strings.Count}");
+            }
+        }
+        else
+        {
+            Debug.LogError($"String data file not found in Resources: {fileName}.");
+        }
+    }
+
     // --- МЕТОДИ ДЛЯ InteractionZone ---
 
     // area_pick_
@@ -63,6 +91,9 @@ public class LevelManager : MonoBehaviour
         // Ми вимикаємо лише компонент Collider2D, щоб ZoneObject міг залишитися,
         // якщо він потрібен для запуску анімації польоту, або вимикаємо весь об'єкт,
         // якщо він більше не потрібен (залежить від вашого flow).
+
+        string hintText = LevelManager.Instance.gameStrings.GetString("00_END_GAME_BBT");
+        Debug.Log($"New Hint: {hintText}");
 
         // Щоб зберегти об'єкт для майбутніх анімацій, краще вимкнути лише колайдер:
         Collider2D collider = zoneObject.GetComponent<Collider2D>();
@@ -93,9 +124,7 @@ public class LevelManager : MonoBehaviour
     }
 
     // area_zoom_, area_dialog_
-    /// <summary>
     /// Відкриває режим зуму, активуючи відповідний контейнер.
-    /// </summary>
     /// <param name="zoomName">Назва зуму (наприклад, "Chest" або "Shelf").</param>
     public void HandleZoom(string zoomName)
     {
@@ -114,9 +143,7 @@ public class LevelManager : MonoBehaviour
         }
     }
 
-    /// <summary>
     /// Закриває режим зуму, повертаючись до основного огляду сцени.
-    /// </summary>
     public void CloseZoom()
     {
         if (zoomContainer != null)
@@ -128,9 +155,7 @@ public class LevelManager : MonoBehaviour
     }
 
     // area_link_
-    // ----------------------------------------
     // МЕТОД ПЕРЕХОДУ З ЗАТЕМНЕННЯМ
-    // ----------------------------------------
     /// Запускає процес затемнення та завантаження сцени.
     /// Цей метод викликається з InteractionZone.
     public void LoadScene(string sceneName)
@@ -186,9 +211,7 @@ public class LevelManager : MonoBehaviour
         faderPanel.color = finalColor;
     }
 
-    // ----------------------------------------
     // МЕТОД ДЛЯ НОВОЇ СЦЕНИ (Fade In)
-    // ----------------------------------------
     /// Метод, який нова сцена викликає для плавного "виходу" з чорного екрана.
     /// Рекомендується викликати його у Start() нової сцени.
     public void FadeIn()
