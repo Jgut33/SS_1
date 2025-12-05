@@ -125,7 +125,7 @@ PrefabInstance:
   serializedVersion: 2
   m_Modification:
     serializedVersion: 3
-    m_TransformParent: {fileID: 1841621391}
+    m_TransformParent: {fileID: 0}
     m_Modifications:
     - target: {fileID: 16776283685605883, guid: 6bc03399d1c25d14da00f51f5c75b2fb, type: 3}
       propertyPath: m_Pivot.x
@@ -227,11 +227,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
---- !u!224 &1247860362 stripped
-RectTransform:
-  m_CorrespondingSourceObject: {fileID: 16776283685605883, guid: 6bc03399d1c25d14da00f51f5c75b2fb, type: 3}
-  m_PrefabInstance: {fileID: 1247860360}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1825564515
 GameObject:
   m_ObjectHideFlags: 0
@@ -382,20 +377,13 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
-    m_AddedGameObjects:
-    - targetCorrespondingSourceObject: {fileID: 8175998102271803623, guid: ae8dceac7ce17db4083ed27b23d3fcc9, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 1247860362}
+    m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: ae8dceac7ce17db4083ed27b23d3fcc9, type: 3}
---- !u!4 &1841621391 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 8175998102271803623, guid: ae8dceac7ce17db4083ed27b23d3fcc9, type: 3}
-  m_PrefabInstance: {fileID: 1841621390}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
   m_Roots:
   - {fileID: 1825564518}
   - {fileID: 1841621390}
+  - {fileID: 1247860360}

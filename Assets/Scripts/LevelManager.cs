@@ -17,6 +17,9 @@ public class LevelManager : MonoBehaviour
     [Tooltip("UI Image, який використовується як затемнення (FaderPanel).")]
     public Image faderPanel;
 
+    [Tooltip("Час (у секундах), за який відбувається затемнення до чорного.")]
+    public float fadeDuration = 0.5f;
+
     [Header("Data Management")]
     public GameStringData gameStrings;
 
@@ -31,6 +34,7 @@ public class LevelManager : MonoBehaviour
         {
             Instance = this;
             // Optionally: DontDestroyOnLoad(gameObject); якщо менеджер має бути на всіх сценах
+            LoadStrings("strings_ua");
         }
         else
         {
@@ -48,7 +52,32 @@ public class LevelManager : MonoBehaviour
         }
     }
 
-    
+    /// <summary>
+    /// Завантажує текстові дані з JSON-файлу у папці Resources.
+    /// </summary>
+    /// <param name="fileName">Назва файлу без розширення (наприклад, "strings_ua").</param>
+    private void LoadStrings(string fileName)
+    {
+        TextAsset jsonFile = Resources.Load<TextAsset>(fileName);
+
+        if (jsonFile != null)
+        {
+            // 1. Десеріалізація JSON:
+            // JsonUtility не підтримує пряму десеріалізацію в Dictionary<string, string>, 
+            // тому ми використовуємо обхідний шлях: десеріалізацію у клас з єдиним словником.
+            gameStrings = JsonUtility.FromJson<GameStringData>(jsonFile.text);
+
+            if (gameStrings != null && gameStrings.strings != null)
+            {
+                Debug.Log($"Strings loaded successfully from {fileName}.json. Total entries: {gameStrings.strings.Count}");
+            }
+        }
+        else
+        {
+            Debug.LogError($"String data file not found in Resources: {fileName}.");
+        }
+    }
+
     // --- МЕТОДИ ДЛЯ InteractionZone ---
 
     // area_pick_
@@ -63,7 +92,7 @@ public class LevelManager : MonoBehaviour
         // якщо він потрібен для запуску анімації польоту, або вимикаємо весь об'єкт,
         // якщо він більше не потрібен (залежить від вашого flow).
 
-        string hintText = StringManager.Instance.gameStrings.GetString("00_END_GAME_BBT");
+        string hintText = LevelManager.Instance.gameStrings.GetString("00_END_GAME_BBT");
         Debug.Log($"New Hint: {hintText}");
 
         // Щоб зберегти об'єкт для майбутніх анімацій, краще вимкнути лише колайдер:
@@ -132,20 +161,13 @@ public class LevelManager : MonoBehaviour
     public void LoadScene(string sceneName)
     {
         // Перевіряємо, чи існує сцена та чи налаштована панель затемнення
-        if (Application.CanStreamedLevelBeLoaded(sceneName))
+        if (Application.CanStreamedLevelBeLoaded(sceneName) && faderPanel != null)
         {
-            if (faderPanel != null)
-            {
-                StartCoroutine(FadeAndLoadScene(sceneName));
-            }
-            else
-            {
-                SceneManager.LoadScene(sceneName);
-            }
+            StartCoroutine(FadeAndLoadScene(sceneName));
         }
         else
         {
-            Debug.LogError($"Cannot load scene '{sceneName}'");
+            Debug.LogError($"Cannot load scene '{sceneName}' or FaderPanel is not assigned.");
         }
     }
 
@@ -170,10 +192,10 @@ public class LevelManager : MonoBehaviour
         float startAlpha = faderPanel.color.a;
         float timer = 0f;
 
-        while (timer < Const.FadeDuration)
+        while (timer < fadeDuration)
         {
             timer += Time.deltaTime;
-            float newAlpha = Mathf.Lerp(startAlpha, targetAlpha, timer / Const.FadeDuration);
+            float newAlpha = Mathf.Lerp(startAlpha, targetAlpha, timer / fadeDuration);
 
             // Оновлюємо колір, змінюючи лише альфа-канал
             Color newColor = faderPanel.color;
